@@ -17,13 +17,13 @@ export function doActivate(context: vscode.ExtensionContext, vscodeWrapper: Vsco
     // The command has been defined in the package.json file
     // Now provide the implementation of the command with  registerCommand
     // The commandId parameter must match the command field in package.json
-    let disposable = vscode.commands.registerCommand('extension.connectHdfs', () => {
+    let disposable = vscodeWrapper.registerCommand('extension.connectHdfs', () => {
         // The code you place here will be executed every time your command is executed
         // Display a message box to the user
         vscode.window.showInformationMessage('TODO: Add HDFS Connection String');
     });
     context.subscriptions.push(disposable);
-    context.subscriptions.push(vscode.window.registerTreeDataProvider('hdfsFiles', new HdfsTreeDataProvider()));
+    context.subscriptions.push(vscodeWrapper.registerTreeDataProvider('hdfsFiles', new HdfsTreeDataProvider()));
 }
 
 // this method is called when your extension is deactivated
@@ -49,7 +49,7 @@ export class VscodeWrapper {
     }
 }
 
-class HdfsTreeDataProvider implements vscode.TreeDataProvider<object> {
+export class HdfsTreeDataProvider implements vscode.TreeDataProvider<object> {
     onDidChangeTreeData?: vscode.Event<object>;
     getTreeItem(element: object): vscode.TreeItem | Thenable<vscode.TreeItem> {
         throw new Error("Method not implemented.");
@@ -57,5 +57,9 @@ class HdfsTreeDataProvider implements vscode.TreeDataProvider<object> {
     getChildren(element?: object): vscode.ProviderResult<object[]> {
         throw new Error("Method not implemented.");
     }
+
+}
+
+export class HdfsNode extends vscode.TreeItem {
 
 }
