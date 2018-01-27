@@ -20,10 +20,22 @@ export function activate(context: vscode.ExtensionContext) {
         // Display a message box to the user
         vscode.window.showInformationMessage('TODO: Add HDFS Connection String');
     });
-
     context.subscriptions.push(disposable);
+
+    context.subscriptions.push(vscode.window.registerTreeDataProvider('hdfsFiles', new HdfsTreeDataProvider()));
 }
 
 // this method is called when your extension is deactivated
 export function deactivate() {
+}
+
+class HdfsTreeDataProvider implements vscode.TreeDataProvider<object> {
+    onDidChangeTreeData?: vscode.Event<object>;
+    getTreeItem(element: object): vscode.TreeItem | Thenable<vscode.TreeItem> {
+        throw new Error("Method not implemented.");
+    }
+    getChildren(element?: object): vscode.ProviderResult<object[]> {
+        throw new Error("Method not implemented.");
+    }
+
 }
