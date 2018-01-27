@@ -71,7 +71,15 @@ suite("Activation Tests", () => {
             TypeMoq.It.isValue('hdfsFiles'),
             TypeMoq.It.is<HdfsTreeDataProvider>(x => true)), 
         TypeMoq.Times.once());
-
-
     });
+
+    test("GetItem should return itself", () => {
+        // Given a HdfsTreeProvider
+        let provider = new HdfsTreeDataProvider();
+        let node = new HdfsNode('test');
+        // When I call GetItem and pass in a HdfsNode
+        let item = provider.getTreeItem(node);
+        // The node should be returned
+        assert.strictEqual(item, node);
+    })
 });
