@@ -9,7 +9,7 @@ import * as assert from 'assert';
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
 import * as vscode from 'vscode';
-import * as myExtension from '../extension';
+import { VscodeWrapper, doActivate } from '../extension';
 
 class MockExtensionContext implements vscode.ExtensionContext {
     subscriptions: { dispose(): any; }[];
@@ -33,9 +33,9 @@ suite("Activation Tests", () => {
     test("Should have 2 subscriptions registered for disposal", () => {
         // Given an extension context that 
         let context = new MockExtensionContext();
-
+        let vscodeWrapper = new VscodeWrapper();
         // When I activate the extension
-        myExtension.activate(context);
+        doActivate(context, vscodeWrapper);
 
         // Then I expect 2 objects to have been registered (1 command, 1 tree provider)
         assert.strictEqual(context.subscriptions.length, 2);
