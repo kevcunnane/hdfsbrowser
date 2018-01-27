@@ -73,7 +73,7 @@ suite("Activation Tests", () => {
         TypeMoq.Times.once());
     });
 
-    test("GetItem should return itself", () => {
+    test("GetTreeItem should return node passed to it", () => {
         // Given a HdfsTreeProvider
         let provider = new HdfsTreeDataProvider();
         let node = new HdfsNode('test');

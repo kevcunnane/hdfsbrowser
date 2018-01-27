@@ -52,7 +52,7 @@ export class VscodeWrapper {
 export class HdfsTreeDataProvider implements vscode.TreeDataProvider<HdfsNode> {
     onDidChangeTreeData?: vscode.Event<HdfsNode>;
     getTreeItem(element: HdfsNode): vscode.TreeItem | Thenable<vscode.TreeItem> {
-        throw new Error("Method not implemented.");
+        return element;
     }
     getChildren(element?: HdfsNode): vscode.ProviderResult<HdfsNode[]> {
         throw new Error("Method not implemented.");
