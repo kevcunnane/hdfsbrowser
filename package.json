@@ -1,36 +1,48 @@
 {
-    "name": "hdfsbrowser",
-    "displayName": "hdfsbrowser",
-    "description": "A file browser implementation for connecting to and listing contents of HDFS files and folders",
-    "version": "0.0.1",
-    "publisher": "kcunnane",
-    "engines": {
-        "vscode": "^1.19.0"
+  "name": "hdfsbrowser",
+  "displayName": "hdfsbrowser",
+  "description": "A file browser implementation for connecting to and listing contents of HDFS files and folders",
+  "version": "0.0.1",
+  "publisher": "kcunnane",
+  "engines": {
+    "vscode": "^1.19.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:extension.connectHdfs",
+    "onView:hdfsFiles"
+  ],
+  "main": "./out/extension",
+  "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "id": "hdfsFiles",
+          "name": "HDFS Files"
+        }
+      ]
     },
-    "categories": [
-        "Other"
-    ],
-    "activationEvents": [
-        "onCommand:extension.sayHello"
-    ],
-    "main": "./out/extension",
-    "contributes": {
-        "commands": [{
-            "command": "extension.sayHello",
-            "title": "Hello World"
-        }]
-    },
-    "scripts": {
-        "vscode:prepublish": "npm run compile",
-        "compile": "tsc -p ./",
-        "watch": "tsc -watch -p ./",
-        "postinstall": "node ./node_modules/vscode/bin/install",
-        "test": "npm run compile && node ./node_modules/vscode/bin/test"
-    },
-    "devDependencies": {
-        "typescript": "^2.6.1",
-        "vscode": "^1.1.6",
-        "@types/node": "^7.0.43",
-        "@types/mocha": "^2.2.42"
-    }
+    "commands": [
+      {
+        "command": "extension.connectHdfs",
+        "title": "Connect to HDFS folder"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "postinstall": "node ./node_modules/vscode/bin/install",
+    "test": "npm run compile && node ./node_modules/vscode/bin/test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^2.2.42",
+    "@types/node": "^7.0.43",
+    "typemoq": "^2.1.0",
+    "typescript": "^2.6.1",
+    "vscode": "^1.1.6"
+  }
 }

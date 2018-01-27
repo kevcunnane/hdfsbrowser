@@ -11,12 +11,33 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 import * as myExtension from '../extension';
 
+class MockExtensionContext implements vscode.ExtensionContext {
+    subscriptions: { dispose(): any; }[];
+    workspaceState: vscode.Memento;
+    globalState: vscode.Memento;
+    extensionPath: string;
+    asAbsolutePath(relativePath: string): string {
+        throw new Error("Method not implemented.");
+    }
+    storagePath: string;
+
+    constructor() {
+        this.subscriptions = [];
+    }
+}
+
 // Defines a Mocha test suite to group tests of similar kind together
-suite("Extension Tests", () => {
+suite("Activation Tests", () => {
 
     // Defines a Mocha unit test
-    test("Something 1", () => {
-        assert.equal(-1, [1, 2, 3].indexOf(5));
-        assert.equal(-1, [1, 2, 3].indexOf(0));
+    test("Should have 2 subscriptions registered for disposal", () => {
+        // Given an extension context that 
+        let context = new MockExtensionContext();
+
+        // When I activate the extension
+        myExtension.activate(context);
+
+        // Then I expect 2 objects to have been registered (1 command, 1 tree provider)
+        assert.strictEqual(context.subscriptions.length, 2);
     });
 });
