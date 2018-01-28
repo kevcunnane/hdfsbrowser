@@ -52,7 +52,7 @@ describe("When Connecting to HDFS", () => {
         // When I add a connection into the provider
         hdfsProvider.addConnection('/path/to/folder');
 
-        // Then 
-        hdfsProvider.should.have.property('root').with.lengthOf(1);
+        // Then the node should be added to the root
+        should(hdfsProvider).have.property('root').with.lengthOf(1);
     });
 });
