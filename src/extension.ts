@@ -55,6 +55,9 @@ export class HdfsTreeDataProvider implements vscode.TreeDataProvider<HdfsNode> {
         return element;
     }
     getChildren(element?: HdfsNode): vscode.ProviderResult<HdfsNode[]> {
+        if (!element) {
+            return [];
+        }
         throw new Error("Method not implemented.");
     }
 
