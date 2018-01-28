@@ -18,10 +18,11 @@ export function deactivate() {
 
 
 export class HdfsProvider implements vscode.TreeDataProvider<HdfsNode> {
+    private root: HdfsNode[];
     onDidChangeTreeData?: vscode.Event<HdfsNode>;
 
     constructor(context: vscode.ExtensionContext, vscodeApi: VscodeWrapper) {
-
+        this.root = [];
     }
 
     getTreeItem(element: HdfsNode): vscode.TreeItem | Thenable<vscode.TreeItem> {
@@ -33,11 +34,12 @@ export class HdfsProvider implements vscode.TreeDataProvider<HdfsNode> {
     }
 
     addConnection(path: string): void {
-        throw new Error("Method not implemented.");
+        this.root.push(new HdfsNode(path));
     }
 
 }
 
 export class HdfsNode {
-
+    constructor(private path: string) {
+    }
 }
