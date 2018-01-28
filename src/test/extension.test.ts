@@ -10,7 +10,7 @@ import * as TypeMoq from 'typemoq';
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
 import * as vscode from 'vscode';
-import { VscodeWrapper, doActivate, HdfsNode, HdfsTreeDataProvider } from '../extension';
+import { VscodeWrapper, doActivate, HdfsNode, HdfsTreeDataProvider, HdfsConnection } from '../extension';
 import { Disposable } from 'vscode';
 import * as utils from '../utils';
 
@@ -83,7 +83,7 @@ suite("Tree Provider Tests", () => {
     test("GetTreeItem should return node passed to it", () => {
         // Given a HdfsTreeProvider
         let provider = new HdfsTreeDataProvider();
-        let node = new HdfsNode('test');
+        let node = new HdfsConnection('test');
         // When I call GetItem and pass in a HdfsNode
         let item = provider.getTreeItem(node);
         // The node should be returned
@@ -102,7 +102,7 @@ suite("Tree Provider Tests", () => {
         assert.deepEqual(result, []);
     });
 
-    test("GetChildren should return folder if HDFS path has been added", (done) => {
+    test("GetChildren should return folder if HDFS path has been added", async () => {
         // Given a HdfsTreeProvider
         let provider = new HdfsTreeDataProvider();
 
@@ -111,16 +111,13 @@ suite("Tree Provider Tests", () => {
         let connectionPath = '/path/to/remote';
         provider.addConnection(connectionPath);
         let result: Thenable<HdfsNode[]> = utils.asThenable(provider.getChildren(null));
+        let nodes = await result;
         
         // Then the result should include a folder with that path
-        result.then(nodes => {
-            assert.equal(nodes.length, 1);
-            assert.deepEqual(nodes[0].label, connectionPath);
-            // A folder should start as collapsed
-            assert.deepEqual(nodes[0].collapsibleState, vscode.TreeItemCollapsibleState.Collapsed);
-            done();
-        },
-        err => done(err));
+        assert.equal(nodes.length, 1);
+        assert.deepEqual(nodes[0].label, connectionPath);
+        // A folder should start as collapsed
+        assert.deepEqual(nodes[0].collapsibleState, vscode.TreeItemCollapsibleState.Collapsed);
     });
 
 });

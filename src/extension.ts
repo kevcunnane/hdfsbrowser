@@ -50,24 +50,38 @@ export class VscodeWrapper {
 }
 
 export class HdfsTreeDataProvider implements vscode.TreeDataProvider<HdfsNode> {
+    private roots: HdfsConnection[];
     onDidChangeTreeData?: vscode.Event<HdfsNode>;
+
+    constructor() {
+        this.roots = [];
+    }
+
     getTreeItem(element: HdfsNode): vscode.TreeItem | Thenable<vscode.TreeItem> {
         return element;
     }
     getChildren(element?: HdfsNode): vscode.ProviderResult<HdfsNode[]> {
         if (!element) {
-            return [];
+            return this.roots;
         }
         throw new Error("Method not implemented.");
     }
     
     addConnection(path: string): void {
-        throw new Error("Method not implemented.");
+        // TODO throw if path is null
+        this.roots.push(new HdfsConnection(path));
     }
 
 }
 
 
-export class HdfsNode extends vscode.TreeItem {
+export abstract class HdfsNode extends vscode.TreeItem {
 
+}
+
+export class HdfsConnection extends HdfsNode {
+
+    constructor(private path: string) {
+        super(path, vscode.TreeItemCollapsibleState.Collapsed);
+    }
 }
