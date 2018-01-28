@@ -60,8 +60,13 @@ export class HdfsTreeDataProvider implements vscode.TreeDataProvider<HdfsNode> {
         }
         throw new Error("Method not implemented.");
     }
+    
+    addConnection(path: string): void {
+        throw new Error("Method not implemented.");
+    }
 
 }
+
 
 export class HdfsNode extends vscode.TreeItem {
 

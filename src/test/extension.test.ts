@@ -12,6 +12,7 @@ import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
 import { VscodeWrapper, doActivate, HdfsNode, HdfsTreeDataProvider } from '../extension';
 import { Disposable } from 'vscode';
+import * as utils from '../utils';
 
 class MockExtensionContext implements vscode.ExtensionContext {
     subscriptions: { dispose(): any; }[];
@@ -87,7 +88,7 @@ suite("Tree Provider Tests", () => {
         let item = provider.getTreeItem(node);
         // The node should be returned
         assert.strictEqual(item, node);
-    })
+    });
 
     test("GetChildren should return empty for null input", () => {
         // Given a HdfsTreeProvider
@@ -99,5 +100,28 @@ suite("Tree Provider Tests", () => {
         // Then an empty array should be returned if no HDFS path
         // has been registered
         assert.deepEqual(result, []);
-    })
+    });
+
+    test("GetChildren should return folder if HDFS path has been added", (done) => {
+        // Given a HdfsTreeProvider
+        let provider = new HdfsTreeDataProvider();
+
+        // When I save a 
+        // ... and call GetChildren
+        let connectionPath = '/path/to/remote';
+        provider.addConnection(connectionPath);
+        let result: Thenable<HdfsNode[]> = utils.asThenable(provider.getChildren(null));
+        
+        // Then the result should include a folder with that path
+        result.then(nodes => {
+            assert.equal(nodes.length, 1);
+            assert.deepEqual(nodes[0].label, connectionPath);
+            // A folder should start as collapsed
+            assert.deepEqual(nodes[0].collapsibleState, vscode.TreeItemCollapsibleState.Collapsed);
+            done();
+        },
+        err => done(err));
+    });
+
 });
+
