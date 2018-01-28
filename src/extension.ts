@@ -1,6 +1,7 @@
 'use strict';
 import * as vscode from 'vscode';
 import { VscodeWrapper } from './vscodeWrapper';
+import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -9,7 +10,8 @@ export function activate(context: vscode.ExtensionContext) {
     // Use the console to output diagnostic information (console.log) and errors (console.error)
     // This line of code will only be executed once when your extension is activated
     console.log('Congratulations, your extension "hdfsbrowser" is now active!');
-
+    context.subscriptions.push(vscode.window.registerTreeDataProvider('hdfs.files',
+        new HdfsProvider(context, new VscodeWrapper())));
 }
 
 // this method is called when your extension is deactivated
@@ -18,28 +20,77 @@ export function deactivate() {
 
 
 export class HdfsProvider implements vscode.TreeDataProvider<HdfsNode> {
-    private root: HdfsNode[];
-    onDidChangeTreeData?: vscode.Event<HdfsNode>;
+    static readonly NoConnectionsMessage = 'No connections added';
+    static readonly ConnectionsLabel = 'Connections';
+    private connections: HdfsNode[];
+    private _onDidChangeTreeData = new vscode.EventEmitter<HdfsNode>();
+
+    public get onDidChangeTreeData(): vscode.Event<HdfsNode> {
+        return this._onDidChangeTreeData.event;
+    }
 
     constructor(context: vscode.ExtensionContext, vscodeApi: VscodeWrapper) {
-        this.root = [];
+        this.connections = [];
+        let connectionIndex = 0;
+        context.subscriptions.push(vscodeApi.registerCommand('hdfs.connect', () => {
+            // The code you place here will be executed every time your command is executed
+            // Display a message box to the user
+            vscode.window.showInformationMessage('TODO: Add HDFS Connection String for real');
+            this.addConnection(`/connection${connectionIndex}`);
+        }));
     }
 
     getTreeItem(element: HdfsNode): vscode.TreeItem | Thenable<vscode.TreeItem> {
-        throw new Error("Method not implemented.");
+        return element.getTreeItem();
     }
 
     getChildren(element?: HdfsNode): vscode.ProviderResult<HdfsNode[]> {
-        throw new Error("Method not implemented.");
+        if (!element) {
+            return this.connections.length > 0 ? this.connections : [new MessageNode(HdfsProvider.NoConnectionsMessage)];
+        }
     }
 
     addConnection(path: string): void {
-        this.root.push(new HdfsNode(path));
+        this.connections.push(new FolderNode(path));
+        this._onDidChangeTreeData.fire();
     }
 
 }
 
-export class HdfsNode {
+export abstract class HdfsNode {
+
+
+    abstract getChildren(): HdfsNode[] | Promise<HdfsNode[]>;
+    abstract getTreeItem(): TreeItem | Promise<TreeItem>;
+}
+
+export class FolderNode extends HdfsNode {
+
     constructor(private path: string) {
+        super();
     }
+    getChildren(): HdfsNode[] | Promise<HdfsNode[]> {
+        throw new Error("Method not implemented.");
+    }
+    getTreeItem(): vscode.TreeItem | Promise<vscode.TreeItem> {
+        return new TreeItem(this.path, TreeItemCollapsibleState.Collapsed);
+    }
+    
+}
+export class MessageNode extends HdfsNode {
+
+    constructor(private message: string) {
+        super();
+    }
+
+    getChildren(): HdfsNode[] | Promise<HdfsNode[]> {
+        return [];
+    }
+
+    getTreeItem(): vscode.TreeItem | Promise<vscode.TreeItem> {
+        return new TreeItem(this.message, TreeItemCollapsibleState.None);
+    }
+
+
+    
 }

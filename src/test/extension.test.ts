@@ -9,8 +9,9 @@ import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
 
 import * as myExtension from '../extension';
-import { HdfsProvider } from '../extension';
+import { HdfsProvider, HdfsNode, MessageNode } from '../extension';
 import { VscodeWrapper } from '../vscodeWrapper';
+import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 
 class MockExtensionContext implements vscode.ExtensionContext {
     subscriptions: { dispose(): any; }[];
@@ -46,13 +47,52 @@ describe("When Connecting to HDFS", () => {
     let context = new MockExtensionContext();
     let vscodeApi = mockVsCodeWrapperForActivation();
 
-    it("Should add a node to the tree root", () => {
+    it("Should return message if no HDFS Connections exist", async () => {
         // Given a provider
         let hdfsProvider = new HdfsProvider(context, vscodeApi.object);
-        // When I add a connection into the provider
-        hdfsProvider.addConnection('/path/to/folder');
 
-        // Then the node should be added to the root
-        should(hdfsProvider).have.property('root').with.lengthOf(1);
+        // When no connections exists
+        // Then there should be a message indicating this for the root node
+        let roots: HdfsNode[] = await hdfsProvider.getChildren(null);
+        roots.should.have.length(1);
+        let treeItem = await roots[0].getTreeItem();
+        treeItem.label.should.equal(HdfsProvider.NoConnectionsMessage);
+        treeItem.collapsibleState.should.equal(TreeItemCollapsibleState.None);
+    });
+
+    it("Should return tree item for any HdfsNode", async () => {
+        // Given a provider
+        let hdfsProvider = new HdfsProvider(context, vscodeApi.object);
+
+        // When I ask for a tree item
+        let label = 'label';
+        let item = await hdfsProvider.getTreeItem(new MessageNode(label));
+
+        // Then I expect the item to match
+        should(item).not.be.null();
+        should(item.label).equal(label);
+    })
+
+    it("Should add a node to the tree root", async () => {
+        // Given a provider
+        let hdfsProvider = new HdfsProvider(context, vscodeApi.object);
+        let updateCalled = false;
+        hdfsProvider.onDidChangeTreeData(() => updateCalled = true, this);
+        // When I add a connection into the provider
+        let connectionPath = '/path/to/folder';
+        hdfsProvider.addConnection(connectionPath);
+
+        // Then 
+        should(updateCalled).be.true();
+
+        // ... and the node should be added to the root
+        should(hdfsProvider).have.property('connections').with.lengthOf(1);
+
+        // ... and the root should now be expandable
+        let roots: HdfsNode[] = await hdfsProvider.getChildren(null);
+        roots.should.have.length(1);
+        let treeItem = await roots[0].getTreeItem();
+        treeItem.label.should.equal(connectionPath);
+        treeItem.collapsibleState.should.equal(TreeItemCollapsibleState.Collapsed);
     });
 });
