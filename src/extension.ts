@@ -13,17 +13,17 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function doActivate(context: vscode.ExtensionContext, vscodeWrapper: VscodeWrapper) {
-    console.log('Congratulations, your extension "hdfsbrowser" is now active!');
+    console.log('Congratulations, your extension "HDFS" is now active!');
     // The command has been defined in the package.json file
     // Now provide the implementation of the command with  registerCommand
     // The commandId parameter must match the command field in package.json
-    let disposable = vscodeWrapper.registerCommand('extension.connectHdfs', () => {
+    let disposable = vscodeWrapper.registerCommand('hdfs.connect', () => {
         // The code you place here will be executed every time your command is executed
         // Display a message box to the user
         vscode.window.showInformationMessage('TODO: Add HDFS Connection String');
     });
     context.subscriptions.push(disposable);
-    context.subscriptions.push(vscodeWrapper.registerTreeDataProvider('hdfsFiles', new HdfsTreeDataProvider()));
+    context.subscriptions.push(vscodeWrapper.registerTreeDataProvider('hdfs.files', new HdfsTreeDataProvider()));
 }
 
 // this method is called when your extension is deactivated

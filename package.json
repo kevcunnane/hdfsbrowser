@@ -1,6 +1,6 @@
 {
-  "name": "hdfsbrowser",
-  "displayName": "hdfsbrowser",
+  "name": "hdfs",
+  "displayName": "Hadoop File Browser",
   "description": "A file browser implementation for connecting to and listing contents of HDFS files and folders",
   "version": "0.0.1",
   "publisher": "kcunnane",
@@ -11,25 +11,38 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:extension.connectHdfs",
-    "onView:hdfsFiles"
+    "onCommand:hdfs.connect",
+    "onView:hdfs.files"
   ],
   "main": "./out/extension",
   "contributes": {
     "views": {
       "explorer": [
         {
-          "id": "hdfsFiles",
+          "id": "hdfs.files",
           "name": "HDFS Files"
         }
       ]
     },
     "commands": [
       {
-        "command": "extension.connectHdfs",
-        "title": "Connect to HDFS folder"
+        "command": "hdfs.connect",
+        "title": "Connect to HDFS folder",
+        "icon": {
+          "dark": "resources/dark/open-file.svg",
+          "light": "resources/light/open-file.svg"
+        }
       }
-    ]
+    ],
+    "menus": {
+      "view/title": [
+        {
+            "command": "hdfs.connect",
+            "when": "view == hdfs.files",
+            "group": "navigation@1"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
