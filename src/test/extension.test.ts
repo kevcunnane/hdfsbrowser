@@ -72,6 +72,12 @@ suite("Activation Tests", () => {
             TypeMoq.It.is<HdfsTreeDataProvider>(x => true)), 
         TypeMoq.Times.once());
     });
+});
+
+
+// Defines a Mocha test suite to group tests of similar kind together
+suite("Tree Provider Tests", () => {
+
 
     test("GetTreeItem should return node passed to it", () => {
         // Given a HdfsTreeProvider
@@ -81,5 +87,17 @@ suite("Activation Tests", () => {
         let item = provider.getTreeItem(node);
         // The node should be returned
         assert.strictEqual(item, node);
+    })
+
+    test("GetChildren should return empty for null input", () => {
+        // Given a HdfsTreeProvider
+        let provider = new HdfsTreeDataProvider();
+
+        // When I call GetChildren with no input (which is the root condition)
+        let result = provider.getChildren(null);
+
+        // Then an empty array should be returned if no HDFS path
+        // has been registered
+        assert.deepEqual(result, []);
     })
 });
