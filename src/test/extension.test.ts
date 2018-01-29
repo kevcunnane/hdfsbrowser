@@ -133,6 +133,7 @@ describe("When Connecting to HDFS", () => {
         let item = await dirNode.getTreeItem();
         item.collapsibleState.should.equal(TreeItemCollapsibleState.Collapsed);
         // TODO fix Folder label behavior
+        item.label.should.equal('dir1');
 
         // and the files as not expandable
         item = await children[2].getTreeItem();
@@ -140,6 +141,9 @@ describe("When Connecting to HDFS", () => {
         item.label.should.equal('filename2');
         
         // TODO and the sub-directory should have 1 child
-        
+        children = await hdfsProvider.getChildren(dirNode);
+        should(children).have.length(1);
+        item = await children[0].getTreeItem();
+        item.collapsibleState.should.equal(TreeItemCollapsibleState.None);
     });
 });
