@@ -18,10 +18,49 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() {
 }
 
+export interface IFile {
+    path: string;
+    isDirectory: boolean;
+}
+
+export class File implements IFile {
+    constructor(public path: string, public isDirectory: boolean) {
+
+    }
+
+    public static createChild(parent: IFile, fileName: string, isDirectory: boolean) {
+        let childPath = `${parent}/${fileName}`;
+        return new File(childPath, isDirectory);
+    }
+
+    public static createFile(parent: IFile, fileName: string) {
+        let childPath = `${parent}/${fileName}`;
+        return new File(childPath, false);
+    }
+
+    public static createDirectory(parent: IFile, fileName: string) {
+        let childPath = `${parent}/${fileName}`;
+        return new File(childPath, true);
+    }
+}
+
+export interface IFileSource {
+
+    enumerateFiles(path: string): Promise<IFile[]>;
+
+}
+
+export class HdfsFileSource implements IFileSource {
+    enumerateFiles(path: string): Promise<IFile[]> {
+        throw new Error("Method not implemented.");
+    }
+    
+}
 
 export class HdfsProvider implements vscode.TreeDataProvider<HdfsNode> {
     static readonly NoConnectionsMessage = 'No connections added';
     static readonly ConnectionsLabel = 'Connections';
+
     private connections: HdfsNode[];
     private _onDidChangeTreeData = new vscode.EventEmitter<HdfsNode>();
 
@@ -36,7 +75,7 @@ export class HdfsProvider implements vscode.TreeDataProvider<HdfsNode> {
             // The code you place here will be executed every time your command is executed
             // Display a message box to the user
             vscode.window.showInformationMessage('TODO: Add HDFS Connection String for real');
-            this.addConnection(`/connection${connectionIndex}`);
+            this.addConnection(`/connection${connectionIndex}`, new HdfsFileSource());
         }));
     }
 
@@ -50,7 +89,7 @@ export class HdfsProvider implements vscode.TreeDataProvider<HdfsNode> {
         }
     }
 
-    addConnection(path: string): void {
+    addConnection(path: string, fileSource: IFileSource): void {
         this.connections.push(new FolderNode(path));
         this._onDidChangeTreeData.fire();
     }

@@ -9,7 +9,7 @@ import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
 
 import * as myExtension from '../extension';
-import { HdfsProvider, HdfsNode, MessageNode } from '../extension';
+import { HdfsProvider, HdfsNode, MessageNode, IFileSource, IFile, File, HdfsFileSource } from '../extension';
 import { VscodeWrapper } from '../vscodeWrapper';
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 
@@ -41,7 +41,16 @@ function mockVsCodeWrapperForActivation() : TypeMoq.IMock<VscodeWrapper> {
     return vscodeWrapper;
 }
 
-
+class MockFileSource implements IFileSource {
+    filesToReturn: Map<string,IFile[]>;
+    constructor() {
+        this.filesToReturn = new Map<string,IFile[]>();
+    }
+    enumerateFiles(path: string): Promise<IFile[]> {
+        let files: IFile[] = this.filesToReturn.get(path);
+        return Promise.resolve(files);
+    }
+}
 
 describe("When Connecting to HDFS", () => {
     let context = new MockExtensionContext();
@@ -80,7 +89,7 @@ describe("When Connecting to HDFS", () => {
         hdfsProvider.onDidChangeTreeData(() => updateCalled = true, this);
         // When I add a connection into the provider
         let connectionPath = '/path/to/folder';
-        hdfsProvider.addConnection(connectionPath);
+        hdfsProvider.addConnection(connectionPath, new MockFileSource());
 
         // Then 
         should(updateCalled).be.true();
@@ -94,5 +103,35 @@ describe("When Connecting to HDFS", () => {
         let treeItem = await roots[0].getTreeItem();
         treeItem.label.should.equal(connectionPath);
         treeItem.collapsibleState.should.equal(TreeItemCollapsibleState.Collapsed);
+    });
+
+    it("Should expand to show folders and files", async () => {
+        // Given 
+        // ... and a connected folder
+        let fileSource = new MockFileSource();
+        let hdfsProvider = new HdfsProvider(context, vscodeApi.object);
+        let connectionPath = '/path/to/folder';
+        hdfsProvider.addConnection(connectionPath, fileSource);
+
+        // ... and a backing data source with 1 sub-folder and some files
+        let connectionFile = new File(connectionPath, true);
+        let directory1 =  File.createDirectory(connectionFile, 'dir1');
+        fileSource.filesToReturn[connectionPath] = [
+            directory1,
+            File.createFile(connectionFile, 'filename1'),
+            File.createFile(connectionFile, 'filename2'),
+        ];
+        fileSource.filesToReturn[directory1.path] = [File.createFile(directory1, 'filename3')];
+
+        // when I expand the connection node
+        let connectionNode = await hdfsProvider.getChildren(null)[0];
+        let children = await hdfsProvider.getChildren(connectionNode);
+        
+        // It should list all folders as collapsed, and files as leaf nodes
+        should(children).have.length(3);
+        // TODO check directory and file values
+
+        // TODO and the sub-directory should have 1 child
+
     });
 });
