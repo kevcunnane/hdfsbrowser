@@ -84,7 +84,9 @@ export class HdfsProvider implements vscode.TreeDataProvider<HdfsNode> {
     }
 
     getChildren(element?: HdfsNode): vscode.ProviderResult<HdfsNode[]> {
-        if (!element) {
+        if (element) {
+            return element.getChildren();
+        } else {
             return this.connections.length > 0 ? this.connections : [new MessageNode(HdfsProvider.NoConnectionsMessage)];
         }
     }
