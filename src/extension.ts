@@ -1,5 +1,6 @@
 'use strict';
 import * as vscode from 'vscode';
+import * as fspath from 'path';
 import { VscodeWrapper } from './vscodeWrapper';
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 
@@ -28,19 +29,20 @@ export class File implements IFile {
 
     }
 
+    static createPath(path: string, fileName: string) {
+        return fspath.join(path, fileName);
+    }
+
     public static createChild(parent: IFile, fileName: string, isDirectory: boolean) {
-        let childPath = `${parent}/${fileName}`;
-        return new File(childPath, isDirectory);
+        return new File(File.createPath(parent.path, fileName), isDirectory);
     }
 
     public static createFile(parent: IFile, fileName: string) {
-        let childPath = `${parent}/${fileName}`;
-        return new File(childPath, false);
+        return File.createChild(parent, fileName, false);
     }
 
     public static createDirectory(parent: IFile, fileName: string) {
-        let childPath = `${parent}/${fileName}`;
-        return new File(childPath, true);
+        return File.createChild(parent, fileName, true);
     }
 }
 
@@ -92,7 +94,7 @@ export class HdfsProvider implements vscode.TreeDataProvider<HdfsNode> {
     }
 
     addConnection(path: string, fileSource: IFileSource): void {
-        this.connections.push(new FolderNode(path));
+        this.connections.push(new FolderNode(path, fileSource));
         this._onDidChangeTreeData.fire();
     }
 
@@ -100,24 +102,54 @@ export class HdfsProvider implements vscode.TreeDataProvider<HdfsNode> {
 
 export abstract class HdfsNode {
 
-
     abstract getChildren(): HdfsNode[] | Promise<HdfsNode[]>;
     abstract getTreeItem(): TreeItem | Promise<TreeItem>;
 }
 
 export class FolderNode extends HdfsNode {
+    private children: HdfsNode[];
 
-    constructor(private path: string) {
+    constructor(private path: string, private fileSource: IFileSource) {
         super();
     }
-    getChildren(): HdfsNode[] | Promise<HdfsNode[]> {
-        throw new Error("Method not implemented.");
+
+    async getChildren(): Promise<HdfsNode[]> {
+        if (!this.children) {
+            this.children = []
+            let files: IFile[] = await this.fileSource.enumerateFiles(this.path);
+            if (files) {
+                this.children = files.map((file) => {
+                    return file.isDirectory ? new FolderNode(file.path, this.fileSource)
+                                            : new FileNode(file.path, this.fileSource);
+                });
+            }
+        }
+        return this.children;
     }
     getTreeItem(): vscode.TreeItem | Promise<vscode.TreeItem> {
         return new TreeItem(this.path, TreeItemCollapsibleState.Collapsed);
     }
-    
 }
+
+export class FileNode extends HdfsNode {
+
+    constructor(private path: string, private fileSource: IFileSource) {
+        super();
+    }
+
+    getChildren(): HdfsNode[] | Promise<HdfsNode[]> {
+        return [];
+    }
+
+    getTreeItem(): vscode.TreeItem | Promise<vscode.TreeItem> {
+        return new TreeItem(this.fileName, TreeItemCollapsibleState.None);
+    }
+
+    get fileName(): string {
+        return fspath.basename(this.path);
+    }
+}
+
 export class MessageNode extends HdfsNode {
 
     constructor(private message: string) {
@@ -131,7 +163,4 @@ export class MessageNode extends HdfsNode {
     getTreeItem(): vscode.TreeItem | Promise<vscode.TreeItem> {
         return new TreeItem(this.message, TreeItemCollapsibleState.None);
     }
-
-
-    
 }

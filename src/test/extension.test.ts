@@ -116,22 +116,30 @@ describe("When Connecting to HDFS", () => {
         // ... and a backing data source with 1 sub-folder and some files
         let connectionFile = new File(connectionPath, true);
         let directory1 =  File.createDirectory(connectionFile, 'dir1');
-        fileSource.filesToReturn[connectionPath] = [
+        fileSource.filesToReturn.set(connectionPath, [
             directory1,
             File.createFile(connectionFile, 'filename1'),
             File.createFile(connectionFile, 'filename2'),
-        ];
-        fileSource.filesToReturn[directory1.path] = [File.createFile(directory1, 'filename3')];
+        ]);
+        fileSource.filesToReturn.set(directory1.path, [File.createFile(directory1, 'filename3')]);
 
         // when I expand the connection node
         let connectionNode = await hdfsProvider.getChildren(null)[0];
         let children = await hdfsProvider.getChildren(connectionNode);
         
-        // It should list all folders as collapsed, and files as leaf nodes
+        // It should list the folders as collapsed
         should(children).have.length(3);
-        // TODO check directory and file values
+        let dirNode = children[0];
+        let item = await dirNode.getTreeItem();
+        item.collapsibleState.should.equal(TreeItemCollapsibleState.Collapsed);
+        // TODO fix Folder label behavior
 
+        // and the files as not expandable
+        item = await children[2].getTreeItem();
+        item.collapsibleState.should.equal(TreeItemCollapsibleState.None);
+        item.label.should.equal('filename2');
+        
         // TODO and the sub-directory should have 1 child
-
+        
     });
 });
