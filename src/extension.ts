@@ -94,7 +94,7 @@ export class HdfsProvider implements vscode.TreeDataProvider<HdfsNode> {
     }
 
     addConnection(path: string, fileSource: IFileSource): void {
-        this.connections.push(new FolderNode(path, fileSource));
+        this.connections.push(new ConnectionNode(path, fileSource));
         this._onDidChangeTreeData.fire();
     }
 
@@ -109,7 +109,7 @@ export abstract class HdfsNode {
 export class FolderNode extends HdfsNode {
     private children: HdfsNode[];
 
-    constructor(private path: string, private fileSource: IFileSource) {
+    constructor(protected path: string, protected fileSource: IFileSource) {
         super();
     }
 
@@ -126,8 +126,25 @@ export class FolderNode extends HdfsNode {
         }
         return this.children;
     }
+
     getTreeItem(): vscode.TreeItem | Promise<vscode.TreeItem> {
-        return new TreeItem(this.path, TreeItemCollapsibleState.Collapsed);
+        return new TreeItem(this.getDisplayName(), TreeItemCollapsibleState.Collapsed);
+    }
+
+    getDisplayName(): string {
+        return fspath.basename(this.path);
+    }
+
+}
+
+export class ConnectionNode extends FolderNode {
+
+    constructor(path: string, fileSource: IFileSource) {
+        super(path, fileSource);
+    }
+
+    getDisplayName(): string {
+        return this.path;
     }
 }
 
