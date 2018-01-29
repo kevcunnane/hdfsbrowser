@@ -58,5 +58,8 @@
     "typemoq": "^2.1.0",
     "typescript": "^2.6.1",
     "vscode": "^1.1.6"
+  },
+  "dependencies": {
+    "webhdfs": "^1.1.1"
   }
 }

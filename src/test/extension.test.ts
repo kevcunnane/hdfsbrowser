@@ -9,10 +9,22 @@ import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
 
 import * as myExtension from '../extension';
-import { HdfsProvider, HdfsNode, MessageNode, IFileSource, IFile, File, HdfsFileSource } from '../extension';
+import { HdfsProvider, HdfsNode, MessageNode, IFileSource, IFile, File, HdfsFileSource, IHdfsClient, IHdfsFileStatus   } from '../extension';
 import { VscodeWrapper } from '../vscodeWrapper';
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
+import { IMock } from 'typemoq/_all';
 
+async function assertThrowsAsync(fn, regExp) {
+    let f = () => {};
+    try {
+      await fn();
+    } catch(e) {
+      f = () => {throw e};
+    } finally {
+      assert.throws(f, regExp);
+    }
+  }
+  
 class MockExtensionContext implements vscode.ExtensionContext {
     subscriptions: { dispose(): any; }[];
     workspaceState: vscode.Memento;
@@ -145,4 +157,48 @@ describe("When Connecting to HDFS", () => {
         item = await children[0].getTreeItem();
         item.collapsibleState.should.equal(TreeItemCollapsibleState.None);
     });
+});
+
+describe("HDFS File Source", () => {
+    function setupReaddirReturns(client: IMock<IHdfsClient>, err, files): void {
+        client.setup(c => c.readdir(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
+        .returns((path: string, callback: any) => {
+            callback(err, files);
+            return null;
+        });
+    }
+    // Note: wrote the 2 tests below at the same time, then enabled in sequence
+    it("Should handle error case by rejecting with message", async () => {
+        // Given an error will occur when connecting
+        let errorMsg = 'MyError';
+        let mockClient = TypeMoq.Mock.ofType<IHdfsClient>();
+        setupReaddirReturns(mockClient, new Error(errorMsg), null);
+
+        // When I enumerate a directory
+        let fileSource = new HdfsFileSource(mockClient.object);
+        // Then I should reject the promise with the error returned from the client
+        assertThrowsAsync(async () => await fileSource.enumerateFiles('/somePath'), errorMsg);
+    });
+
+    it("Should convert returned files to files, directories to directories", async () => {
+        // Given the client will list 1 directory and 1 file
+        let path = 'basepath';
+        let mockClient = TypeMoq.Mock.ofType<IHdfsClient>();
+        setupReaddirReturns(mockClient, null, [
+            <IHdfsFileStatus> { pathSuffix: 'directoryName', type: "DIRECTORY" },
+            <IHdfsFileStatus> { pathSuffix: 'fileName', type: "FILE" }
+        ]);
+
+        // when I enumerate a directory
+        let fileSource = new HdfsFileSource(mockClient.object);
+        let files: IFile[] = await fileSource.enumerateFiles(path);
+
+        // then I should get a set of IFiles, with 1 being a directory and 1 being a file
+        should(files).have.length(2);
+        files[0].isDirectory.should.be.true;
+        files[0].path.should.match(File.createPath(path, 'directoryName'));
+        files[1].isDirectory.should.be.false;
+        files[1].path.should.match(File.createPath(path, 'fileName'));
+
+    })
 });
