@@ -1,6 +1,7 @@
 'use strict';
 import * as vscode from 'vscode';
 import * as fspath from 'path';
+import * as webhdfs from 'webhdfs';
 import { VscodeWrapper } from './vscodeWrapper';
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 
@@ -52,9 +53,45 @@ export interface IFileSource {
 
 }
 
+export interface IHdfsOptions {
+    host?: string,
+    port?: string,
+    protocol?: string,
+    user?: string,
+    path?: string
+}
+
+export interface IHdfsFileStatus {
+    type: "FILE" | "DIRECTORY",
+    pathSuffix: string
+}
+
+export interface IHdfsClient {
+    readdir(path: string, callback: (err: Error, files: any[]) => void);
+}
+
 export class HdfsFileSource implements IFileSource {
+    constructor(private client: IHdfsClient) {
+    }
+
+    public static create(options: IHdfsOptions): HdfsFileSource {
+        return new HdfsFileSource(webhdfs.createClient(options));
+    }
+
     enumerateFiles(path: string): Promise<IFile[]> {
-        throw new Error("Method not implemented.");
+        return new Promise((resolve, reject) => {
+            this.client.readdir(path, (error, files) => {
+                if (error) {
+                    reject(error.message);
+                } else {
+                    let hdfsFiles: IFile[] = files.map(file => {
+                        let hdfsFile = <IHdfsFileStatus> file;
+                        return new File(File.createPath(path, hdfsFile.pathSuffix), hdfsFile.type === "DIRECTORY");
+                    });
+                    resolve(hdfsFiles);
+                }
+            });
+        });
     }
     
 }
@@ -76,8 +113,17 @@ export class HdfsProvider implements vscode.TreeDataProvider<HdfsNode> {
         context.subscriptions.push(vscodeApi.registerCommand('hdfs.connect', () => {
             // The code you place here will be executed every time your command is executed
             // Display a message box to the user
-            vscode.window.showInformationMessage('TODO: Add HDFS Connection String for real');
-            this.addConnection(`/connection${connectionIndex}`, new HdfsFileSource());
+            vscode.window.showInputBox(<vscode.InputBoxOptions> {
+                prompt: 'What base path should be used when connecting to HDFS on localhost:50070?',
+                value: '/'
+            }).then((path => {
+                if (!path.startsWith('/')) {
+                    path = `/${path}`;
+                }
+                let options: IHdfsOptions = {
+                }
+                this.addConnection(path, HdfsFileSource.create(options));
+            }));
         }));
     }
 
